@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraphrase Prediction and Similarity Report</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Paraphrase Prediction and Similarity Report</h1>
+        <hr>
+
+        <!-- Flash messages for error/success notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-dismissible fade show" role="alert">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form for inputting sentence pairs -->
+        <form method="POST" action="/">
+            <div class="form-group">
+                <label for="sentences">Enter sentence pairs (format: "Sentence 1, Sentence 2" on each line):</label>
+                <textarea class="form-control" id="sentences" name="sentences" rows="6" placeholder="Sentence 1, Sentence 2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Report</button>
+        </form>
+
+        <!-- Display results if available -->
+        {% if results %}
+            <hr>
+            <h3 class="text-center">Similarity Results</h3>
+            <table class="table table-bordered mt-4">
+                <thead>
+                    <tr>
+                        <th>Sentence 1</th>
+                        <th>Sentence 2</th>
+                        <th>Paraphrase Prediction</th>
+                        <th>Similarity Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                        <tr>
+                            <td>{{ result['Sentence 1'] }}</td>
+                            <td>{{ result['Sentence 2'] }}</td>
+                            <td>{{ result['Paraphrase Prediction'] }}</td>
+                            <td>{{ result['Similarity Score'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Download options -->
+            <div class="text-center mt-4">
+                <a href="/download/{{ csv_file }}" class="btn btn-success">Download CSV</a>
+                <a href="/download/{{ excel_file }}" class="btn btn-success">Download Excel</a>
+                <a href="/download/{{ pdf_file }}" class="btn btn-success">Download PDF</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

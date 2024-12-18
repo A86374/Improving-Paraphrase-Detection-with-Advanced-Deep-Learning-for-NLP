@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paraphrase Prediction and Similarity Report</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQz6wSLMTfKzmrzZbJaH-HdR1stGBgBmBAHGMw3Z1KdKrqyMGrKq7zey1jHOw&s');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #fff; /* White text */
+            min-height: 100vh;
+        }
+
+        /* Container styling */
+        .container {
+            background-color: rgba(30, 30, 30, 0.85); /* Darker background with better opacity */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+            margin-top: 5rem; /* Space from the top */
+        }
+
+        h1 {
+            font-weight: 700; /* Bold title */
+            margin-bottom: 20px; /* Space below title */
+        }
+
+        hr {
+            border-color: #007bff; /* Custom color for horizontal line */
+            margin: 20px 0; /* Space around the line */
+        }
+
+        .btn {
+            border-radius: 25px; /* Rounded buttons */
+            padding: 10px 20px; /* Button padding */
+        }
+
+        .btn-primary {
+            background-color: #007bff; /* Primary button color */
+            border: none; /* No border */
+            transition: background-color 0.3s; /* Smooth transition for hover effect */
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3; /* Darker shade on hover */
+        }
+
+        .btn-success {
+            background-color: #28a745; /* Success button color */
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .btn-success:hover {
+            background-color: #218838; /* Darker shade on hover */
+        }
+
+        /* Table styling */
+        table {
+            background-color: #ffffff; /* White background for table */
+            color: #000; /* Black text */
+            border-radius: 10px; /* Rounded corners for table */
+            overflow: hidden; /* Prevent border radius issues */
+        }
+
+        th {
+            background-color: #007bff; /* Header color */
+            color: #fff; /* White text in header */
+        }
+
+        th, td {
+            vertical-align: middle; /* Center align table cells */
+        }
+
+        /* Responsive design adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px; /* Less padding on smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Paraphrase Prediction and Similarity Report</h1>
+        <hr>
+
+        <!-- Flash messages for error/success notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-dismissible fade show" role="alert">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form for inputting sentence pairs -->
+        <form method="POST" action="/upload">
+            <div id="sentence-pair-container">
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label for="sentence1">Sentence 1:</label>
+                        <input type="text" class="form-control" id="sentence1" name="sentence1[]" placeholder="Enter Sentence 1">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sentence2">Sentence 2:</label>
+                        <input type="text" class="form-control" id="sentence2" name="sentence2[]" placeholder="Enter Sentence 2">
+                    </div>
+                </div>
+                <hr>
+            </div>
+
+            <button type="button" class="btn btn-secondary" id="add-pair-btn">Add Another Sentence Pair</button>
+            <button type="submit" class="btn btn-primary">Generate Report</button>
+        </form>
+
+        <!-- Display results if available -->
+        {% if results %}
+            <hr>
+            <h3 class="text-center">Similarity Results</h3>
+            <table class="table table-bordered mt-4">
+                <thead>
+                    <tr>
+                        <th>Sentence 1</th>
+                        <th>Sentence 2</th>
+                        <th>Paraphrase Prediction</th>
+                        <th>Similarity Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                        <tr>
+                            <td>{{ result['Sentence 1'] }}</td>
+                            <td>{{ result['Sentence 2'] }}</td>
+                            <td>{{ result['Paraphrase Prediction'] }}</td>
+                            <td>{{ result['Similarity Score'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Download options -->
+            <div class="text-center mt-4">
+                <a href="/download/{{ csv_file }}" class="btn btn-success">Download CSV</a>
+                <a href="/download/{{ excel_file }}" class="btn btn-success">Download Excel</a>
+                <a href="/download/{{ pdf_file }}" class="btn btn-success">Download PDF</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Script to dynamically add more sentence pairs
+        document.getElementById('add-pair-btn').addEventListener('click', function() {
+            var container = document.getElementById('sentence-pair-container');
+            var newPair = `
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label for="sentence1">Sentence 1:</label>
+                        <input type="text" class="form-control" name="sentence1[]" placeholder="Enter Sentence 1">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sentence2">Sentence 2:</label>
+                        <input type="text" class="form-control" name="sentence2[]" placeholder="Enter Sentence 2">
+                    </div>
+                </div>
+                <hr>
+            `;
+            container.insertAdjacentHTML('beforeend', newPair);
+        });
+    </script>
+</body>
+</html>
